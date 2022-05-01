@@ -25,6 +25,10 @@ public class Testing : MonoBehaviour
             Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             grid.SetValue(worldPos, 56);
         }
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            grid.ToggleGridLabels();
+        }
     }
 
 }

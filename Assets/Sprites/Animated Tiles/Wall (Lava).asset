@@ -10,15 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13b75c95f34a00d4e8c04f76b73312e6, type: 3}
-  m_Name: Animated Spike
+  m_Name: Wall (Lava)
   m_EditorClassIdentifier: 
   m_AnimatedSprites:
-  - {fileID: 21300000, guid: a9a0547696f3e2348aa75cd26eb63a1f, type: 3}
-  - {fileID: 21300000, guid: b4ee99e42bd850f4f88b11c6b75c1461, type: 3}
-  - {fileID: 21300000, guid: 0de347dba61763e4698d28195afe92e4, type: 3}
-  - {fileID: 21300000, guid: 37085a31376a0ec4489aebe59a6603c9, type: 3}
-  m_MinSpeed: 1
-  m_MaxSpeed: 1
+  - {fileID: 21300000, guid: 4647f00cdc0fd0e4ba32854713c85ead, type: 3}
+  - {fileID: 21300000, guid: f4a36efa6b3a55d42a125cff7938b317, type: 3}
+  - {fileID: 21300000, guid: f6e4f8ecfd7caf9478773c3849a17c88, type: 3}
+  m_MinSpeed: 5
+  m_MaxSpeed: 5
   m_AnimationStartTime: 0
   m_AnimationStartFrame: 0
   m_TileColliderType: 2

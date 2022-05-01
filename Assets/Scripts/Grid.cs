@@ -17,6 +17,7 @@ namespace STP.Grid
         private GridTile[,] m_grid;
 
         private TextMesh[,] debugTextArray;
+        private GameObject gridTextParent;
 
         public Grid(Tilemap tileMap)
         {
@@ -46,6 +47,12 @@ namespace STP.Grid
             m_grid = new GridTile[m_width, m_height];
             debugTextArray = new TextMesh[m_width, m_height];
             Debug.Log("Creating new Grid of size: " + m_width + " by " + m_height);
+
+            gridTextParent = new GameObject("Grid Text");
+            Transform transform = gridTextParent.transform;
+            transform.SetParent(null, false);
+            transform.localPosition = new Vector3(0, 0, 0);
+
 
             for (int x = 0; x < m_grid.GetLength(0); x++)
             {
@@ -106,12 +113,17 @@ namespace STP.Grid
             return GetValue(x, y);
         }
 
+        public void ToggleGridLabels()
+        {
+            gridTextParent.SetActive(!gridTextParent.activeInHierarchy);
+        }
+
 
         private TextMesh CreateWorldText(string text, Vector3 localPosition, Color color)
         {
             GameObject newText = new GameObject("WorldText", typeof(TextMesh));
             Transform transform = newText.transform;
-            transform.SetParent(null, false);
+            transform.SetParent(gridTextParent.transform, false);
             transform.localPosition = localPosition;
             TextMesh textMesh = newText.GetComponent<TextMesh>();
             textMesh.anchor = TextAnchor.MiddleCenter;
