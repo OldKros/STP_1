@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +13,8 @@ namespace STP.Grid
         UGrid m_grid;
         Tilemap m_WalkableTileMap;
 
-        Dictionary<Vector3, GridTile> m_gridLookup = new Dictionary<Vector3, GridTile>();
+        Dictionary<Vector3Int, Node> m_gridLookup = new Dictionary<Vector3Int, Node>();
+        public Dictionary<Vector3Int, Node> GridLookup { get { return m_gridLookup; } }
 
         private int m_width;
         public int Width { get { return m_width; } }
@@ -22,6 +24,9 @@ namespace STP.Grid
         private Vector3Int m_originPosition;
 
         private TextMesh[,] debugTextArray;
+
+
+
         private GameObject gridTextParent;
 
         public GameGrid(UGrid grid, Tilemap groundTilemap)
@@ -38,54 +43,42 @@ namespace STP.Grid
             SetUpGrid();
         }
 
-        // public GameGrid(int width, int height, float cellSize, Vector3 originPosition)
-        // {
-        //     m_width = width;
-        //     m_height = height;
-        //     m_cellSize = new Vector3(cellSize, cellSize);
-        //     m_originPosition = originPosition;
-
-        //     SetUpGrid();
-        // }
-
         private void SetUpGrid()
         {
             SetUpGridBoundaries();
+            debugTextArray = new TextMesh[m_width, m_height];
 
-            // Set up the new grid with the size
 
             Debug.Log("Creating new Grid of size: " + m_width + " by " + m_height);
-            debugTextArray = new TextMesh[m_width, m_height];
+            Debug.Log("Creating new Grid with a cell size of " + m_cellSize.x + ", " + m_cellSize.y);
+
 
             gridTextParent = new GameObject("Grid Text Parent");
             Transform transform = gridTextParent.transform;
             transform.SetParent(null, false);
             transform.localPosition = new Vector3(0, 0, 0);
 
+            // Set up the new grid with the size
             // Once we have the grid size we can set it up, starting at the origin position.
             for (int x = 0; x < m_width; x++)
             {
                 for (int y = 0; y < m_height; y++)
                 {
-
-
                     bool isWalkable = m_WalkableTileMap.HasTile(GetWorldPosition(x, y));
+                    Vector3Int gridNodeOrigin = new Vector3Int(x * m_cellSize.x, y * m_cellSize.y);
+                    m_gridLookup.Add(gridNodeOrigin,
+                                    new Node(gridNodeOrigin, m_cellSize, isWalkable));
 
-                    Vector3 newOrigin = m_originPosition + new Vector3(x * m_cellSize.x, y * m_cellSize.y);
 
-                    m_gridLookup.Add(newOrigin,
-                                    new GridTile(newOrigin, m_cellSize, isWalkable));
+                    Color labelColour = isWalkable ? Color.white : Color.red;
+                    debugTextArray[x, y] = CreateWorldText(m_gridLookup[new Vector3Int(x, y) * m_cellSize].ToString(), CenterOfTile(x, y), labelColour);
 
-                    Color labelColour;
-                    if (isWalkable)
-                        labelColour = Color.white;
-                    else
-                        labelColour = Color.red;
-                    debugTextArray[x, y] = CreateWorldText(m_gridLookup[newOrigin].ToString(), CenterOfTile(x, y), labelColour);
-
-                    Debug.Log("Creating GridTile at " + x * m_cellSize.x + ", " + y * m_cellSize.y);
+                    Debug.Log("Creating GridTile at " + gridNodeOrigin);
                     Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
                     Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x + 1, y), Color.white, 100f);
+                    // Debug.Log("Creating GridTile at " + x + ", " + y);
+                    // Debug.DrawLine(new Vector3(x, y), new Vector3(x, y + m_cellSize.y), labelColour, 100f);
+                    // Debug.DrawLine(new Vector3(x, y), new Vector3(x + m_cellSize.x, y), labelColour, 100f);
                 }
             }
 
@@ -93,10 +86,9 @@ namespace STP.Grid
             Debug.DrawLine(GetWorldPosition(m_width, 0), GetWorldPosition(m_width, m_height), Color.white, 100f);
         }
 
-
-        private Vector3 CenterOfTile(GridTile tile)
+        private Vector3 CenterOfTile(Node tile)
         {
-            return GetWorldPosition(tile.Origin.x, tile.Origin.y) + tile.CellSize * 0.5f;
+            return GetWorldPosition(tile.Origin.x, tile.Origin.y) + (Vector3)tile.CellSize * 0.5f;
         }
 
         private Vector3 CenterOfTile(int x, int y)
@@ -108,7 +100,6 @@ namespace STP.Grid
         {
             Vector3Int startingOrigin = new Vector3Int(0, 0, 0);
             Vector3Int startingSize = new Vector3Int(0, 0, 0);
-
 
             Tilemap[] currentMap = m_grid.GetComponentsInChildren<Tilemap>();
             foreach (var map in currentMap)
@@ -130,7 +121,6 @@ namespace STP.Grid
             }
             m_width = startingSize.x;
             m_height = startingSize.y;
-
             m_originPosition = startingOrigin;
         }
 
@@ -148,6 +138,20 @@ namespace STP.Grid
         {
             x = Mathf.FloorToInt((worldPosition - m_originPosition).x / m_cellSize.x);
             y = Mathf.FloorToInt((worldPosition - m_originPosition).y / m_cellSize.y);
+        }
+
+        public Vector2Int GetXY(Vector3 worldPosition)
+        {
+            return new Vector2Int
+            {
+                x = Mathf.FloorToInt((worldPosition - m_originPosition).x / m_cellSize.x),
+                y = Mathf.FloorToInt((worldPosition - m_originPosition).y / m_cellSize.y)
+            };
+        }
+
+        public Node GetGridNoteAt(int x, int y)
+        {
+            return m_gridLookup[new Vector3Int(x, y)];
         }
 
         // private void SetValue(int x, int y, int value)
