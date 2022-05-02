@@ -14,11 +14,11 @@ namespace STP.Grid
 
         [SerializeField] Dictionary<Tile, GameObject> tileReplacementMap;
 
-        private Grid grid;
+        private GameGrid grid;
         // Start is called before the first frame update
         void Start()
         {
-            grid = new Grid(groundTileMap);
+            grid = new GameGrid(groundTileMap);
         }
 
 

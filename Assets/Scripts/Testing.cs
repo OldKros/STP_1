@@ -4,17 +4,16 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 using STP.Grid;
-using Grid = STP.Grid.Grid;
 
 public class Testing : MonoBehaviour
 {
     [SerializeField] Tilemap tileMap;
 
-    private Grid grid;
+    private GameGrid grid;
     // Start is called before the first frame update
     void Start()
     {
-        grid = new Grid(tileMap);
+        grid = new GameGrid(tileMap);
     }
 
     // Update is called once per frame

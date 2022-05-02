@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 
 namespace STP.Grid
 {
-    public class Grid
+    public class GameGrid
     {
         Tilemap m_TileMap;
 
@@ -19,7 +19,7 @@ namespace STP.Grid
         private TextMesh[,] debugTextArray;
         private GameObject gridTextParent;
 
-        public Grid(Tilemap tileMap)
+        public GameGrid(Tilemap tileMap)
         {
             m_TileMap = tileMap;
 
@@ -32,7 +32,7 @@ namespace STP.Grid
         }
 
 
-        public Grid(int width, int height, float cellSize, Vector3 originPosition)
+        public GameGrid(int width, int height, float cellSize, Vector3 originPosition)
         {
             m_width = width;
             m_height = height;
