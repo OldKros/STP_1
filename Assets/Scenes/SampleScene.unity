@@ -994,7 +994,7 @@ Tilemap:
       - {fileID: 21300000, guid: 4647f00cdc0fd0e4ba32854713c85ead, type: 3}
       - {fileID: 21300000, guid: f4a36efa6b3a55d42a125cff7938b317, type: 3}
       - {fileID: 21300000, guid: f6e4f8ecfd7caf9478773c3849a17c88, type: 3}
-      m_AnimationSpeed: 5.0000005
+      m_AnimationSpeed: 5
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   m_TileAssetArray:
@@ -2741,11 +2741,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4819648777615414873, guid: 43b031ac4a0a38c42ad91e19b111cf4d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.41
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4819648777615414873, guid: 43b031ac4a0a38c42ad91e19b111cf4d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.11
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4819648777615414873, guid: 43b031ac4a0a38c42ad91e19b111cf4d, type: 3}
       propertyPath: m_LocalPosition.z

@@ -65,13 +65,13 @@ namespace STP.Grid
                 for (int y = 0; y < m_height; y++)
                 {
                     bool isWalkable = m_WalkableTileMap.HasTile(GetWorldPosition(x, y));
-                    Vector3Int gridNodeOrigin = new Vector3Int(x * m_cellSize.x, y * m_cellSize.y);
+                    Vector3Int gridNodeOrigin = new Vector3Int(x * m_cellSize.x, y * m_cellSize.y) + m_originPosition;
                     m_gridLookup.Add(gridNodeOrigin,
                                     new Node(gridNodeOrigin, m_cellSize, isWalkable));
 
 
                     Color labelColour = isWalkable ? Color.white : Color.red;
-                    debugTextArray[x, y] = CreateWorldText(m_gridLookup[new Vector3Int(x, y) * m_cellSize].ToString(), CenterOfTile(x, y), labelColour);
+                    debugTextArray[x, y] = CreateWorldText(gridNodeOrigin.ToString(), CenterOfTile(x, y), labelColour);
 
                     Debug.Log("Creating GridTile at " + gridNodeOrigin);
                     Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
@@ -136,22 +136,30 @@ namespace STP.Grid
 
         public void GetXY(Vector3 worldPosition, out int x, out int y)
         {
-            x = Mathf.FloorToInt((worldPosition - m_originPosition).x / m_cellSize.x);
-            y = Mathf.FloorToInt((worldPosition - m_originPosition).y / m_cellSize.y);
+            x = Mathf.FloorToInt(worldPosition.x / m_cellSize.x);
+            y = Mathf.FloorToInt(worldPosition.y / m_cellSize.y);
         }
 
         public Vector2Int GetXY(Vector3 worldPosition)
         {
             return new Vector2Int
             {
-                x = Mathf.FloorToInt((worldPosition - m_originPosition).x / m_cellSize.x),
-                y = Mathf.FloorToInt((worldPosition - m_originPosition).y / m_cellSize.y)
+                x = Mathf.FloorToInt(worldPosition.x / m_cellSize.x),
+                y = Mathf.FloorToInt(worldPosition.y / m_cellSize.y)
             };
         }
 
-        public Node GetGridNoteAt(int x, int y)
+        public Node GetGridNodeAt(int x, int y)
         {
-            return m_gridLookup[new Vector3Int(x, y)];
+            if (m_gridLookup.ContainsKey(new Vector3Int(x, y)))
+                return m_gridLookup[new Vector3Int(x, y)];
+
+            return null;
+        }
+
+        public Vector3Int GetOriginPoint()
+        {
+            return m_originPosition;
         }
 
         // private void SetValue(int x, int y, int value)

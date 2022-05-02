@@ -20,6 +20,11 @@ namespace STP.Pathfinding
         {
         }
 
+        public PathNode(Node node)
+        : base(node.Origin, node.CellSize, node.IsWalkable)
+        {
+
+        }
 
         public void CalculateFCost()
         {

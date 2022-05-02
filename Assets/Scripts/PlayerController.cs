@@ -46,16 +46,21 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             gridManager.GameGrid.GetXY(mouseWorldPos, out int endX, out int endY);
+            Debug.Log(transform.position);
             gridManager.GameGrid.GetXY(transform.position, out int startX, out int startY);
             List<PathNode> path = pathfinder.FindPath(startX, startY, endX, endY);
 
             if (path != null)
             {
-                for (int i = 0; i < path.Count; i++)
+                Debug.Log("Path is not null Poggers: " + path.Count);
+                for (int i = 0; i < path.Count-1; i++)
                 {
-                    Debug.DrawLine(path[i].Origin, path[i + 1].Origin, Color.red, 2f);
+                    // Debug.Log("");
+                    Debug.DrawLine(path[i].Origin + Vector3.one * 0.5f, path[i + 1].Origin + Vector3.one * 0.5f, Color.red, 2f);
                 }
             }
+            else
+                Debug.LogWarning("Path is null");
 
             // m_destination = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             // if (m_destination.x < transform.position.x) spriteRenderer.flipX = true;
