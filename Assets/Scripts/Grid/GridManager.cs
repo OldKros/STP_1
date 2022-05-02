@@ -8,17 +8,25 @@ namespace STP.Grid
 
     public class GridManager : MonoBehaviour
     {
+        [SerializeField] UnityEngine.Grid grid;
+
         [SerializeField] Tilemap groundTileMap;
         [SerializeField] Tilemap interactableTileMap;
         [SerializeField] Tilemap colliderTileMap;
 
         [SerializeField] Dictionary<Tile, GameObject> tileReplacementMap;
 
-        private GameGrid grid;
+        private GameGrid m_gameGrid;
+        public GameGrid GameGrid { get { return m_gameGrid; } }
         // Start is called before the first frame update
-        void Start()
+        void Awake()
         {
-            grid = new GameGrid(groundTileMap);
+            m_gameGrid = new GameGrid(grid, groundTileMap);
+        }
+
+        private void Start()
+        {
+
         }
 
 
@@ -26,6 +34,17 @@ namespace STP.Grid
         void Update()
         {
 
+        }
+
+
+        public int GetGridHeight()
+        {
+            return m_gameGrid.Height;
+        }
+
+        public int GetGridWidth()
+        {
+            return m_gameGrid.Width;
         }
     }
 }

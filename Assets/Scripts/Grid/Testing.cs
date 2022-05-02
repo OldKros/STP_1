@@ -7,27 +7,20 @@ using STP.Grid;
 
 public class Testing : MonoBehaviour
 {
+    [SerializeField] UnityEngine.Grid grid;
     [SerializeField] Tilemap tileMap;
 
-    private GameGrid grid;
+    private GameGrid gameGrid;
     // Start is called before the first frame update
     void Start()
     {
-        grid = new GameGrid(tileMap);
+        gameGrid = new GameGrid(grid, tileMap);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            grid.SetValue(worldPos, 56);
-        }
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            grid.ToggleGridLabels();
-        }
+
     }
 
 }
