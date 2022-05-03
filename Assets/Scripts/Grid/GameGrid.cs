@@ -21,6 +21,7 @@ namespace STP.Grid
         private int m_height;
         public int Height { get { return m_height; } }
         private Vector3Int m_cellSize;
+        public Vector3Int CellSize { get { return m_cellSize; } }
         private Vector3Int m_originPosition;
 
         private TextMesh[,] debugTextArray;

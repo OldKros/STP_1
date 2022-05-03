@@ -61,9 +61,45 @@ namespace STP.Pathfinding
                     );
                 }
             }
+            Vector3Int endPosition = new Vector3Int(endX, endY);
+            Vector3Int startPosition = new Vector3Int(startX, startY);
+            
+            
+            while (!gridLookup.ContainsKey(endPosition) || !gridLookup[endPosition].IsWalkable)
+            //for (int i = 0; i < 10; i++)
+            {
+                Vector3 difference = endPosition - startPosition;
 
-            PathNode startNode = gridLookup[new Vector3Int(startX, startY)];
-            PathNode endNode = gridLookup[new Vector3Int(endX, endY)];
+                Vector3Int cellSize = gameGrid.CellSize;
+
+                if (difference.x == 0)
+                {
+                    endPosition.y = difference.y > 0 ? endPosition.y -= cellSize.y : endPosition.y += cellSize.y;
+                }
+                else if (difference.y == 0)
+                {
+                    endPosition.x = difference.x > 0 ? endPosition.x -= cellSize.x : endPosition.x += cellSize.x;
+                }
+                else if (difference.x == difference.y)
+                {
+                    endPosition.x = difference.x > 0 ? endPosition.x -= cellSize.x : endPosition.x += cellSize.x;
+                }
+                else if (difference.x < difference.y)
+                {
+                    if (Math.Abs(difference.x) < Math.Abs(difference.y))
+                    {
+                        endPosition.y = difference.y > 0 ? endPosition.y -= cellSize.y : endPosition.y += cellSize.y;
+                    }
+                    else
+                    {
+                        endPosition.x = difference.x > 0 ? endPosition.x -= cellSize.x : endPosition.x += cellSize.x;
+                    }
+                }
+                    
+            }
+
+            PathNode startNode = gridLookup[startPosition];
+            PathNode endNode = gridLookup[endPosition];
 
 
             Debug.Log("Grid Size: " + gridLookup.Count);
