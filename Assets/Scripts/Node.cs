@@ -8,6 +8,7 @@ namespace STP
     {
         public Vector3Int Origin { get; protected set; }
         public Vector3Int CellSize { get; protected set; }
+        public Vector3 Center { get => Origin + (Vector3)CellSize * 0.5f; }
 
         public bool IsWalkable { get; protected set; }
 

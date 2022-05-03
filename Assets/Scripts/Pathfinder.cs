@@ -63,11 +63,14 @@ namespace STP.Pathfinding
             }
             Vector3Int endPosition = new Vector3Int(endX, endY);
             Vector3Int startPosition = new Vector3Int(startX, startY);
-            
-            
-            while (!gridLookup.ContainsKey(endPosition) || !gridLookup[endPosition].IsWalkable)
-            //for (int i = 0; i < 10; i++)
+
+            int maxAttempts = 50;
+
+            for (int i = 0; i < maxAttempts; i++)
             {
+                if (gridLookup.ContainsKey(endPosition) && gridLookup[endPosition].IsWalkable)
+                { break; }
+
                 Vector3 difference = endPosition - startPosition;
 
                 Vector3Int cellSize = gameGrid.CellSize;
@@ -84,7 +87,7 @@ namespace STP.Pathfinding
                 {
                     endPosition.x = difference.x > 0 ? endPosition.x -= cellSize.x : endPosition.x += cellSize.x;
                 }
-                else if (difference.x < difference.y)
+                else 
                 {
                     if (Math.Abs(difference.x) < Math.Abs(difference.y))
                     {
@@ -97,6 +100,9 @@ namespace STP.Pathfinding
                 }
                     
             }
+
+            // If we still havent found a path then the we will ignore the click
+            if (!gridLookup.ContainsKey(endPosition) || !gridLookup.ContainsKey(startPosition)) return null;
 
             PathNode startNode = gridLookup[startPosition];
             PathNode endNode = gridLookup[endPosition];
@@ -164,7 +170,7 @@ namespace STP.Pathfinding
 
         private List<PathNode> GetNeighbourList(PathNode node)
         {
-            List<PathNode> neighbors = new List<PathNode>(); ;
+            List<PathNode> viableNeighbors = new List<PathNode>(); ;
             PathNode neighbor;
             //System.Random random = new System.Random();
 
@@ -172,14 +178,36 @@ namespace STP.Pathfinding
             {
                 Vector3Int neighborCoords = node.Origin + direction;
 
+                if (direction.x !=0 && direction.y != 0)
+                {
+                    Vector3Int neighborLeftRight = new Vector3Int
+                    {
+                        x = node.Origin.x + direction.x,
+                        y = node.Origin.y,
+                        z = node.Origin.z
+                    };
+                    Vector3Int neighborAboveBelow = new Vector3Int
+                    {
+                        x = node.Origin.x,
+                        y = node.Origin.y + direction.y,
+                        z = node.Origin.z
+                    };
+
+                    if (!gridLookup.ContainsKey(neighborAboveBelow) || !gridLookup.ContainsKey(neighborLeftRight)
+                        || !gridLookup[neighborAboveBelow].IsWalkable || !gridLookup[neighborLeftRight].IsWalkable)
+                    {
+                        continue;
+                    }
+                }
+                
                 if (gridLookup.ContainsKey(neighborCoords))
                 {
                     neighbor = gridLookup[neighborCoords];
-                    neighbors.Add(neighbor);
+                    viableNeighbors.Add(neighbor);
                 }
             }
 
-            return neighbors;
+            return viableNeighbors;
         }
 
         private List<PathNode> CalculatePath(PathNode endNode)
