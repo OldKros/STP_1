@@ -54,16 +54,13 @@ public class PlayerController : MonoBehaviour
             currentPathIndex = 0;
             if (path != null)
             {
+                //Debug.Log("Path is not null: " + path.Count);
                 for (int i = 0; i < path.Count-1; i++)
                 {
-
                     Debug.DrawLine(path[i].Origin + Vector3.one * 0.5f, path[i + 1].Origin + Vector3.one * 0.5f, Color.red, 2f);
                 }
             }
 
-            // m_destination = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            // if (m_destination.x < transform.position.x) spriteRenderer.flipX = true;
-            // else spriteRenderer.flipX = false;
             // navMeshAgent.destination = destination;
             // navMeshAgent.isStopped = false;
         }
@@ -78,7 +75,9 @@ public class PlayerController : MonoBehaviour
             if (currentPathIndex < path.Count)
             {
                 float movementThisFrame = moveSpeed * Time.deltaTime;
+                var transformSnapShot = transform.position;
                 transform.position = Vector3.MoveTowards(transform.position -spriteOffset, (Vector3)path[currentPathIndex].Origin, movementThisFrame) + spriteOffset;
+                spriteRenderer.flipX = path[currentPathIndex].Origin.x < transformSnapShot.x - spriteOffset.x;
             }
             else
             {
@@ -90,10 +89,17 @@ public class PlayerController : MonoBehaviour
     private void UpdateAnimator()
     {
         // Vector3 velocity = navMeshAgent.velocity;
-        // Vector3 localVelocity = transform.InverseTransformDirection(velocity);
+        //Vector3 localVelocity = transform.InverseTransformDirection(velocity);
         // float speed = localVelocity.x + localVelocity.y;
         // Debug.Log(speed);
-        // animator.SetFloat("movementSpeed", Mathf.Abs(speed));
+        if (path != null && currentPathIndex < path.Count)
+        {
+            animator.SetBool("running", true);
+            //Vector3 localVelocity = transform.TransformDirection(path[currentPathIndex].Origin);
+            //var animatorSpeed = localVelocity.x + localVelocity.y;
+            //animator.SetFloat("movementSpeed", Mathf.Abs(animatorSpeed));
+        }
+        animator.SetBool("running", false);
     }
 
 
