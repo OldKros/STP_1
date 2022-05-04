@@ -26,8 +26,8 @@ namespace STP.Pathfinding
 
         private Dictionary<Vector3Int, PathNode> gridLookup;
 
-        private List<PathNode> openList;
-        private List<PathNode> closedList;
+        private Dictionary<Vector3Int, PathNode> openNodes;
+        private Dictionary<Vector3Int, PathNode> checkedNodes;
 
 
         // public Pathfinder(UGrid grid, Tilemap groundTilemap)
@@ -39,7 +39,8 @@ namespace STP.Pathfinding
         {
             this.gameGrid = gameGrid;
             gridLookup = new Dictionary<Vector3Int, PathNode>();
-
+            openNodes = new();
+            checkedNodes = new();
         }
 
         public List<PathNode> FindPath(int startX, int startY, int endX, int endY)
@@ -65,7 +66,7 @@ namespace STP.Pathfinding
             Vector3Int startPosition = new Vector3Int(startX, startY);
 
             int maxAttempts = 50;
-
+            // Try to find the closest walkable tile to the one clicked on.
             for (int i = 0; i < maxAttempts; i++)
             {
                 if (gridLookup.ContainsKey(endPosition) && gridLookup[endPosition].IsWalkable)
@@ -110,8 +111,11 @@ namespace STP.Pathfinding
 
             Debug.Log("Grid Size: " + gridLookup.Count);
 
-            openList = new List<PathNode> { startNode };
-            closedList = new List<PathNode>();
+            openNodes.Clear();
+            checkedNodes.Clear();
+
+            openNodes.Add(startNode.Origin,startNode);
+            //closedList.Add(startNode.Origin, startNode);
 
             Vector3Int origin = gameGrid.GetOriginPoint();
 
@@ -133,21 +137,24 @@ namespace STP.Pathfinding
             startNode.hCost = CalculateDistanceCost(startNode, endNode);
             startNode.CalculateFCost();
 
-            while (openList.Count > 0)
+            //openList.Add(currentNode.Origin);
+            //closedList.Add(startNode.Origin, startNode);
+
+            while (openNodes.Count > 0)
             {
-                PathNode currentNode = getLowestFCostNode(openList);
+                PathNode currentNode = getLowestFCostNode(openNodes);
                 if (currentNode == endNode)
                 {
                     return CalculatePath(endNode);
                 }
 
-                openList.Remove(currentNode);
-                closedList.Add(currentNode);
+                openNodes.Remove(currentNode.Origin);
+                checkedNodes.Add(currentNode.Origin, currentNode);
 
                 foreach (var neighbour in GetNeighbourList(currentNode))
                 {
-                    if (!neighbour.IsWalkable) closedList.Add(neighbour);
-                    if (closedList.Contains(neighbour)) continue;
+                    if (!neighbour.IsWalkable) checkedNodes.Add(neighbour.Origin, neighbour);
+                    if (checkedNodes.ContainsKey(neighbour.Origin)) continue;
 
 
                     int tentativeGCost = currentNode.gCost + CalculateDistanceCost(currentNode, neighbour);
@@ -158,8 +165,8 @@ namespace STP.Pathfinding
                         neighbour.hCost = CalculateDistanceCost(neighbour, endNode);
                         neighbour.CalculateFCost();
 
-                        if (!openList.Contains(neighbour))
-                            openList.Add(neighbour);
+                        if (!openNodes.ContainsKey(neighbour.Origin))
+                            openNodes.Add(neighbour.Origin, neighbour);
                     }
                 }
             }
@@ -178,7 +185,7 @@ namespace STP.Pathfinding
             {
                 Vector3Int neighborCoords = node.Origin + direction;
 
-                if (direction.x !=0 && direction.y != 0)
+                if (direction.x !=0 && direction.y != 0) 
                 {
                     Vector3Int neighborLeftRight = new Vector3Int
                     {
@@ -232,14 +239,17 @@ namespace STP.Pathfinding
             return MOVE_DIAGANOL_COST * Mathf.Min(xDistance, yDistance) + MOVE_STRAIGHT_COST * remaining;
         }
 
-        private PathNode getLowestFCostNode(List<PathNode> pathNodes)
+        private PathNode getLowestFCostNode(Dictionary<Vector3Int, PathNode> pathNodes)
         {
-            PathNode lowestFCostNode = pathNodes[0];
-            for (int i = 1; i < pathNodes.Count; i++)
+            PathNode lowestFCostNode = null;
+
+            foreach(var node in pathNodes)
             {
-                if (pathNodes[i].fCost < lowestFCostNode.fCost)
+                if (lowestFCostNode == null) { lowestFCostNode = node.Value; }
+
+                if (node.Value.fCost < lowestFCostNode.fCost)
                 {
-                    lowestFCostNode = pathNodes[i];
+                    lowestFCostNode = node.Value;
                 }
             }
             return lowestFCostNode;
