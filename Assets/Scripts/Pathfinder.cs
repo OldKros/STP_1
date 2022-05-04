@@ -153,7 +153,7 @@ namespace STP.Pathfinding
 
                 foreach (var neighbour in GetNeighbourList(currentNode))
                 {
-                    if (!neighbour.IsWalkable) checkedNodes.Add(neighbour.Origin, neighbour);
+                    //if (!neighbour.IsWalkable) checkedNodes.Add(neighbour.Origin, neighbour);
                     if (checkedNodes.ContainsKey(neighbour.Origin)) continue;
 
 
@@ -207,7 +207,9 @@ namespace STP.Pathfinding
                     }
                 }
                 
-                if (gridLookup.ContainsKey(neighborCoords))
+                if (gridLookup.ContainsKey(neighborCoords) 
+                    && gridLookup[neighborCoords].IsWalkable 
+                    && !checkedNodes.ContainsKey(neighborCoords))
                 {
                     neighbor = gridLookup[neighborCoords];
                     viableNeighbors.Add(neighbor);
