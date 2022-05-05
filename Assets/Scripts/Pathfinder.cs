@@ -8,7 +8,6 @@ using System;
 
 namespace STP.Pathfinding
 {
-
     public class Pathfinder
     {
         private const int MOVE_STRAIGHT_COST = 10;
@@ -58,7 +57,7 @@ namespace STP.Pathfinding
                     Debug.Log(keyValuePair);
                     gridLookup.Add(
                         keyValuePair.Key,
-                        new PathNode(keyValuePair.Value)
+                        keyValuePair.Value
                     );
                 }
             }

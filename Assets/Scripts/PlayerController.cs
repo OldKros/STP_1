@@ -1,106 +1,169 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using STP.Grid;
 using STP.Pathfinding;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Tilemaps;
 
-public class PlayerController : MonoBehaviour
+namespace STP
 {
-    [SerializeField] STP.Grid.GridManager gridManager;
-    [SerializeField] float moveSpeed = 5f;
-    [SerializeField] Vector3 spriteOffset;
-    Camera mainCamera;
-    SpriteRenderer spriteRenderer;
-    // NavMeshAgent navMeshAgent;
-    Animator animator;
-
-    Vector3 m_destination;
-    Pathfinder pathfinder;
-    List<PathNode> path;
-    private int currentPathIndex;
-    private void Awake()
+    public class PlayerController : MonoBehaviour
     {
-        mainCamera = Camera.main;
-    }
+        [SerializeField] float moveSpeed = 5f;
+        [SerializeField] Vector3 spriteOffset;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        pathfinder = new Pathfinder(gridManager.GameGrid);
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        animator = GetComponent<Animator>();
-        // navMeshAgent = GetComponent<NavMeshAgent>();
-        // navMeshAgent.updateRotation = false;
-        // navMeshAgent.updateUpAxis = false;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        UpdateAnimator();
-        ProcessMovement();
-    }
+        GridManager gridManager;
+        Camera mainCamera;
+        SpriteRenderer spriteRenderer;
+        // NavMeshAgent navMeshAgent;
+        
+        Animator animator;
+        bool canUpdateAnimator = true;
+        Vector3 m_destination;
+        Pathfinder pathfinder;
+        List<PathNode> path;
+        private int currentPathIndex;
 
-    private void ProcessMovement()
-    {
-        if (Input.GetMouseButtonDown(0))
+        PlayerState playerState = PlayerState.Idle;
+        GridTileEvent triggeredTileEvent = GridTileEvent.None;
+
+        private void Awake()
         {
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            gridManager.GameGrid.GetXY(mouseWorldPos, out int endX, out int endY);
-            Debug.Log(transform.position);
-            gridManager.GameGrid.GetXY(transform.position - spriteOffset, out int startX, out int startY);
-            path = pathfinder.FindPath(startX, startY, endX, endY);
-            currentPathIndex = 0;
-            if (path != null)
+            mainCamera = Camera.main;
+        }
+
+        // Start is called before the first frame update
+        void Start()
+        {
+            if (gridManager is null)
+                gridManager = FindObjectOfType<GridManager>();
+            pathfinder = new Pathfinder(gridManager.GameGrid);
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            animator = GetComponentInChildren<Animator>();
+            // navMeshAgent = GetComponent<NavMeshAgent>();
+            // navMeshAgent.updateRotation = false;
+            // navMeshAgent.updateUpAxis = false;
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+            ProcessMovement();
+            UpdateState();
+        }
+
+        private void UpdateAnimatorBasedOnState()
+        {
+            if (!canUpdateAnimator) return;
+            switch(playerState)
             {
-                //Debug.Log("Path is not null: " + path.Count);
-                for (int i = 0; i < path.Count-1; i++)
-                {
-                    Debug.DrawLine(path[i].Origin + Vector3.one * 0.5f, path[i + 1].Origin + Vector3.one * 0.5f, Color.red, 2f);
-                }
+                case PlayerState.Idle:
+                    animator.SetBool("running", false);
+                    break;
+                case PlayerState.Falling:
+                    animator.SetBool("falling", true);
+                    break;
+                case PlayerState.Moving:
+                    animator.SetBool("running", true);
+                    break;
+                default:
+                    animator.SetBool("running", false);
+                    break;
+            }
+        }
+
+        private void ProcessMovement()
+        {
+            if (playerState != PlayerState.Idle && playerState != PlayerState.Moving) return;
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                GetNewMovementPath();
             }
 
-            // navMeshAgent.destination = destination;
-            // navMeshAgent.isStopped = false;
-        }
-        if (path != null)
-        {
-            
+            if (path == null) return;
+
             if (Vector3.Distance(transform.position, path[currentPathIndex].Origin + spriteOffset) < 0.01)
             {
+                if (path[currentPathIndex] is EventNode)
+                {
+                    triggeredTileEvent = (path[currentPathIndex] as EventNode).TileEvent;
+                }
                 currentPathIndex++;
             }
 
             if (currentPathIndex < path.Count)
             {
+                //Trigger tile event if it is an event node
+                
                 float movementThisFrame = moveSpeed * Time.deltaTime;
                 var transformSnapShot = transform.position;
-                transform.position = Vector3.MoveTowards(transform.position -spriteOffset, (Vector3)path[currentPathIndex].Origin, movementThisFrame) + spriteOffset;
+                transform.position = Vector3.MoveTowards(transform.position - spriteOffset, (Vector3)path[currentPathIndex].Origin, movementThisFrame) + spriteOffset;
                 spriteRenderer.flipX = path[currentPathIndex].Origin.x < transformSnapShot.x - spriteOffset.x;
             }
             else
             {
                 path = null;
             }
-        }
-    }
 
-    private void UpdateAnimator()
-    {
-        // Vector3 velocity = navMeshAgent.velocity;
-        //Vector3 localVelocity = transform.InverseTransformDirection(velocity);
-        // float speed = localVelocity.x + localVelocity.y;
-        // Debug.Log(speed);
-        if (path != null && currentPathIndex < path.Count)
+        }
+
+        private void GetNewMovementPath()
         {
-            animator.SetBool("running", true);
-            //Vector3 localVelocity = transform.TransformDirection(path[currentPathIndex].Origin);
-            //var animatorSpeed = localVelocity.x + localVelocity.y;
-            //animator.SetFloat("movementSpeed", Mathf.Abs(animatorSpeed));
+            gridManager.GameGrid.GetXY(mainCamera.ScreenToWorldPoint(Input.mousePosition), out int endX, out int endY);
+
+            Vector3 movementFromPosition = path == null ? transform.position - spriteOffset : path[currentPathIndex].Origin;
+            gridManager.GameGrid.GetXY(movementFromPosition, out int startX, out int startY);
+
+            path = pathfinder.FindPath(startX, startY, endX, endY);
+            currentPathIndex = 0;
+
+            if (path != null)
+            {
+                //Debug.Log("Path is not null: " + path.Count);
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    Debug.DrawLine(path[i].Origin + Vector3.one * 0.5f, path[i + 1].Origin + Vector3.one * 0.5f, Color.red, 2f);
+                }
+            }
         }
-        animator.SetBool("running", false);
+
+        private void UpdateState()
+        {
+            if (triggeredTileEvent != GridTileEvent.None)
+            {
+                switch (triggeredTileEvent)
+                {
+                    case GridTileEvent.Fall:
+                        playerState = PlayerState.Falling;
+                        break;
+                    case GridTileEvent.Interactible:
+                        playerState = PlayerState.Interacting;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (path != null && currentPathIndex < path.Count)
+            {
+                playerState = PlayerState.Moving;
+            }
+            else
+            {
+                playerState = PlayerState.Idle;
+            }
+            UpdateAnimatorBasedOnState();
+        }
+
+        private enum PlayerState
+        {
+            Idle,
+            Moving,
+            Falling,
+            Interacting
+        }
     }
-
-
 }

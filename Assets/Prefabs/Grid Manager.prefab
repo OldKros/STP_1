@@ -45,6 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   grid: {fileID: 0}
-  groundTileMap: {fileID: 0}
-  interactableTileMap: {fileID: 0}
-  colliderTileMap: {fileID: 0}
+  eventTiles:
+  - tile: {fileID: 11400000, guid: 70c78db8d6d860445ae89cef0d2c3b35, type: 2}
+    gridTileEvent: 2

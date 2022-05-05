@@ -5,16 +5,21 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 using UGrid = UnityEngine.Grid;
+using STP.Pathfinding;
 
 namespace STP.Grid
 {
     public class GameGrid
     {
         UGrid m_grid;
-        Tilemap m_WalkableTileMap;
 
-        Dictionary<Vector3Int, Node> m_gridLookup = new Dictionary<Vector3Int, Node>();
-        public Dictionary<Vector3Int, Node> GridLookup { get { return m_gridLookup; } }
+        List<Tilemap> m_WalkableMaps = new();
+        List<Tilemap> m_InteractibleMaps = new();
+
+        Dictionary<Vector3Int, PathNode> m_gridLookup = new ();
+        public Dictionary<Vector3Int, PathNode> GridLookup { get { return m_gridLookup; } }
+
+        
 
         private int m_width;
         public int Width { get { return m_width; } }
@@ -25,15 +30,12 @@ namespace STP.Grid
         private Vector3Int m_originPosition;
 
         private TextMesh[,] debugTextArray;
-
-
-
         private GameObject gridTextParent;
 
-        public GameGrid(UGrid grid, Tilemap groundTilemap)
+
+        public GameGrid(UGrid grid)
         {
             m_grid = grid;
-            m_WalkableTileMap = groundTilemap;
             m_cellSize = new Vector3Int
             {
                 x = Mathf.RoundToInt(m_grid.cellSize.x),
@@ -65,10 +67,24 @@ namespace STP.Grid
             {
                 for (int y = 0; y < m_height; y++)
                 {
-                    bool isWalkable = m_WalkableTileMap.HasTile(GetWorldPosition(x, y));
+                    bool isWalkable = false;
+                    bool isInteractible = false;
+                    foreach (var walkableMap in m_WalkableMaps)
+                    {
+                        isWalkable = walkableMap.HasTile(GetWorldPosition(x, y));
+                        if (isWalkable) break;
+                    }
+
+                    foreach (var interactibleMap in m_InteractibleMaps)
+                    {
+                        isInteractible = interactibleMap.HasTile(GetWorldPosition(x, y));
+                        if (isInteractible) break;
+                    }
+
                     Vector3Int gridNodeOrigin = new Vector3Int(x * m_cellSize.x, y * m_cellSize.y) + m_originPosition;
-                    m_gridLookup.Add(gridNodeOrigin,
-                                    new Node(gridNodeOrigin, m_cellSize, isWalkable));
+                    PathNode nodeToAdd = new PathNode(gridNodeOrigin, m_cellSize, isWalkable);
+
+                    m_gridLookup.Add(gridNodeOrigin, nodeToAdd);
 
 
                     Color labelColour = isWalkable ? Color.white : Color.red;
@@ -87,24 +103,20 @@ namespace STP.Grid
             Debug.DrawLine(GetWorldPosition(m_width, 0), GetWorldPosition(m_width, m_height), Color.white, 100f);
         }
 
-        private Vector3 CenterOfTile(Node tile)
-        {
-            return GetWorldPosition(tile.Origin.x, tile.Origin.y) + (Vector3)tile.CellSize * 0.5f;
-        }
-
-        private Vector3 CenterOfTile(int x, int y)
-        {
-            return GetWorldPosition((float)x, (float)y) + (Vector3)m_cellSize * 0.5f;
-        }
-
         private void SetUpGridBoundaries()
         {
             Vector3Int startingOrigin = new Vector3Int(0, 0, 0);
             Vector3Int startingSize = new Vector3Int(0, 0, 0);
 
-            Tilemap[] currentMap = m_grid.GetComponentsInChildren<Tilemap>();
-            foreach (var map in currentMap)
+            foreach (var map in m_grid.GetComponentsInChildren<Tilemap>())
             {
+                if (map.tag == "WalkableTileMap") 
+                    m_WalkableMaps.Add(map);
+                if (map.GetComponent<TilemapCollider2D>() != null && map.GetComponent<TilemapCollider2D>().isTrigger)
+                {
+                    m_InteractibleMaps.Add(map);
+                }
+
                 if (map.origin.x < startingOrigin.x)
                     startingOrigin.x = map.origin.x;
                 if (map.origin.y < startingOrigin.y)
@@ -119,10 +131,53 @@ namespace STP.Grid
                     startingSize.x = map.size.x;
                 if (mapSize.y > newSize.y)
                     startingSize.y = map.size.y;
+
             }
             m_width = startingSize.x;
             m_height = startingSize.y;
             m_originPosition = startingOrigin;
+        }
+
+
+        public void SetEventTiles(GridTile[] eventTiles)
+        {
+            foreach (var tilemap in m_InteractibleMaps)
+            {
+                foreach (var position in tilemap.cellBounds.allPositionsWithin)
+                {
+                    if (!tilemap.HasTile(position)) continue;
+                    if (!m_gridLookup.ContainsKey(position)) continue;
+
+                    PathNode currentNodeAtPos = m_gridLookup[position];
+                    GridTileEvent tileEvent;
+
+                    foreach (var tile in eventTiles) {
+                        if (tilemap.GetTile(position) == tile.tile)
+                        {
+                            tileEvent = tile.gridTileEvent;
+                            m_gridLookup[position] = new EventNode(currentNodeAtPos, tileEvent);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool HasEventTileAt(Vector3Int origin)
+        {
+            if (m_gridLookup.ContainsKey(origin))
+                return m_gridLookup[origin] is EventNode;
+            return false;
+        }
+
+        private Vector3 CenterOfTile(Node tile)
+        {
+            return GetWorldPosition(tile.Origin.x, tile.Origin.y) + (Vector3)tile.CellSize * 0.5f;
+        }
+
+        private Vector3 CenterOfTile(int x, int y)
+        {
+            return GetWorldPosition((float)x, (float)y) + (Vector3)m_cellSize * 0.5f;
         }
 
         public Vector3 GetWorldPosition(float x, float y)
@@ -152,11 +207,18 @@ namespace STP.Grid
 
         public Node GetGridNodeAt(int x, int y)
         {
-            if (m_gridLookup.ContainsKey(new Vector3Int(x, y)))
-                return m_gridLookup[new Vector3Int(x, y)];
+            return GetGridNodeAt(new Vector3Int(x, y));
+        }
+
+        public Node GetGridNodeAt(Vector3Int position)
+        {
+            if (m_gridLookup.ContainsKey(position))
+                return m_gridLookup[position];
 
             return null;
         }
+
+        
 
         public Vector3Int GetOriginPoint()
         {
