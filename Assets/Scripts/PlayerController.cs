@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using STP.Grid;
 using STP.Pathfinding;
+using STP.SceneManagement;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Tilemaps;
@@ -12,7 +13,8 @@ namespace STP
     public class PlayerController : MonoBehaviour
     {
         [SerializeField] float moveSpeed = 5f;
-        [SerializeField] Vector3 spriteOffset;
+        [field:SerializeField] public Vector3 SpriteOffset { get; private set; }
+        
 
 
         GridManager gridManager;
@@ -52,7 +54,6 @@ namespace STP
         void Update()
         {
             ProcessMovement();
-            UpdateState();
         }
 
         private void UpdateAnimatorBasedOnState()
@@ -86,7 +87,7 @@ namespace STP
 
             if (path == null) return;
 
-            if (Vector3.Distance(transform.position, path[currentPathIndex].Origin + spriteOffset) < 0.01)
+            if (Vector3.Distance(transform.position, path[currentPathIndex].Origin) < 0.01)
             {
                 if (path[currentPathIndex] is EventNode)
                 {
@@ -101,8 +102,8 @@ namespace STP
                 
                 float movementThisFrame = moveSpeed * Time.deltaTime;
                 var transformSnapShot = transform.position;
-                transform.position = Vector3.MoveTowards(transform.position - spriteOffset, (Vector3)path[currentPathIndex].Origin, movementThisFrame) + spriteOffset;
-                spriteRenderer.flipX = path[currentPathIndex].Origin.x < transformSnapShot.x - spriteOffset.x;
+                transform.position = Vector3.MoveTowards(transform.position, (Vector3)path[currentPathIndex].Origin, movementThisFrame);
+                spriteRenderer.flipX = path[currentPathIndex].Origin.x < transformSnapShot.x ;
             }
             else
             {
@@ -115,7 +116,7 @@ namespace STP
         {
             gridManager.GameGrid.GetXY(mainCamera.ScreenToWorldPoint(Input.mousePosition), out int endX, out int endY);
 
-            Vector3 movementFromPosition = path == null ? transform.position - spriteOffset : path[currentPathIndex].Origin;
+            Vector3 movementFromPosition = path == null ? transform.position : path[currentPathIndex].Origin;
             gridManager.GameGrid.GetXY(movementFromPosition, out int startX, out int startY);
 
             path = pathfinder.FindPath(startX, startY, endX, endY);
@@ -157,6 +158,30 @@ namespace STP
             }
             UpdateAnimatorBasedOnState();
         }
+
+
+        private void OnTriggerEnter2D(Collider2D collision)
+        {
+            if (collision.CompareTag("Portal"))
+            {
+                playerState = PlayerState.Falling;
+            }
+        }
+
+        private void OnTriggerExit2D(Collider2D collision)
+        {
+            if (collision.CompareTag("Portal"))
+            {
+                playerState = PlayerState.Idle;
+            }
+        }
+
+
+        private void OnDisable()
+        {
+            path = null;
+        }
+
 
         private enum PlayerState
         {

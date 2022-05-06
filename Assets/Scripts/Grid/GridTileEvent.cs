@@ -10,6 +10,7 @@ namespace STP.Grid
         None,
         Interactible,
         Fall,
-        Spike
+        Spike,
+        Portal
     }
 }
