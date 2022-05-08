@@ -6,6 +6,7 @@ using STP.Pathfinding;
 using STP.SceneManagement;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 namespace STP
@@ -14,8 +15,8 @@ namespace STP
     {
         [SerializeField] float moveSpeed = 5f;
         [field:SerializeField] public Vector3 SpriteOffset { get; private set; }
-        
 
+        [SerializeField] GameObject menu;
 
         GridManager gridManager;
         Camera mainCamera;
@@ -54,6 +55,7 @@ namespace STP
         void Update()
         {
             ProcessMovement();
+            UpdateState();
         }
 
         private void UpdateAnimatorBasedOnState()
@@ -66,6 +68,7 @@ namespace STP
                     break;
                 case PlayerState.Falling:
                     animator.SetBool("falling", true);
+                    StartCoroutine(Die(1.5f));
                     break;
                 case PlayerState.Moving:
                     animator.SetBool("running", true);
@@ -182,6 +185,22 @@ namespace STP
             path = null;
         }
 
+        private IEnumerator Die(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            menu.SetActive(true);
+        }
+
+
+        public void ResetGame()
+        {
+            SceneManager.LoadScene(0);
+        }
+
+        public void QuitGame()
+        {
+            Application.Quit();
+        }
 
         private enum PlayerState
         {

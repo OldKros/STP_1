@@ -88,7 +88,7 @@ namespace STP.Grid
 
 
                     Color labelColour = isWalkable ? Color.white : Color.red;
-                    debugTextArray[x, y] = CreateWorldText(gridNodeOrigin.ToString(), CenterOfTile(x, y), labelColour);
+                    //debugTextArray[x, y] = CreateWorldText(gridNodeOrigin.ToString(), CenterOfTile(x, y), labelColour);
 
                     Debug.Log("Creating GridTile at " + gridNodeOrigin);
                     Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
